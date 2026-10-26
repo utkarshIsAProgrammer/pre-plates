@@ -29,7 +29,7 @@ export default function PayModal({ order, canteen, onClose, onPaid }) {
         upiId,
         payeeName: canteen?.name,
         amount,
-        note: `PrePlate #${order.tokenNumber ?? tr}`,
+        note: `PrePlates #${order.tokenNumber ?? tr}`,
         tr,
     });
 

@@ -1,4 +1,4 @@
-/* PrePlate service worker — offline shell + menu cache + web push.
+/* PrePlates service worker — offline shell + menu cache + web push.
  *
  * Strategy:
  *   • app shell (index.html, assets): cache-first, refreshed in the background
@@ -101,18 +101,18 @@ self.addEventListener("message", (event) => {
 
 // ─── Web Push — server-sent order events ─────────────────────────────
 // The server fires a VAPID-signed push on order/payment events; this shows
-// it as a system notification even when every PrePlate tab is closed.
+// it as a system notification even when every PrePlates tab is closed.
 
 self.addEventListener("push", (event) => {
     let data = {};
     try {
         data = event.data ? event.data.json() : {};
     } catch {
-        data = { title: "PrePlate", body: event.data?.text() || "" };
+        data = { title: "PrePlates", body: event.data?.text() || "" };
     }
 
     event.waitUntil(
-        self.registration.showNotification(data.title || "PrePlate", {
+        self.registration.showNotification(data.title || "PrePlates", {
             body: data.body || "",
             icon: "/favicon.svg",
             badge: "/favicon.svg",

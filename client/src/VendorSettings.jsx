@@ -307,7 +307,7 @@ export default function VendorSettings() {
                                                   upiId: form.upiId.trim(),
                                                   payeeName: form.name,
                                                   amount: 100,
-                                                  note: "PrePlate preview",
+                                                  note: "PrePlates preview",
                                               })
                                             : ""
                                     }

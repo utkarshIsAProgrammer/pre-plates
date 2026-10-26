@@ -3,6 +3,12 @@ import "dotenv/config";
 import cors from "cors";
 import mongoose from "mongoose";
 import { clerkMiddleware } from "@clerk/express";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import { connectDB } from "./db/db.js";
 import { globalLimiter } from "./middlewares/rateLimit.middleware.js";
@@ -19,9 +25,20 @@ const port = process.env.PORT || 5000;
 
 app.set("trust proxy", 1); // correct client IPs behind reverse proxies (needed for rate limiting later)
 
+const clientUrlEnv = process.env.CLIENT_URL;
+let corsOrigin = true;
+if (clientUrlEnv && clientUrlEnv.trim() !== "*") {
+    const origins = clientUrlEnv
+        .split(",")
+        .map((s) => s.trim().replace(/\/+$/, ""))
+        .filter(Boolean);
+    corsOrigin = origins.length === 1 ? origins[0] : origins;
+}
+
 app.use(
     cors({
-        origin: process.env.CLIENT_URL || "http://localhost:5173",
+        origin: corsOrigin,
+        credentials: true,
     }),
 );
 app.use(express.json({ limit: "7mb" })); // base64 uploads ride as data URLs — headroom for 5MB client cap + base64 overhead (~33%)
@@ -49,6 +66,48 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/push", pushRoutes);
 app.use("/api/uploads", uploadRoutes);
 
+// Locate frontend dist directory across environments (Docker, root npm start, or server/ start)
+const clientDistCandidates = [
+    path.join(__dirname, "../../client/dist"),
+    path.join(__dirname, "../client/dist"),
+    path.resolve(process.cwd(), "client/dist"),
+    path.resolve(process.cwd(), "../client/dist"),
+];
+const clientDistPath = clientDistCandidates.find((p) => fs.existsSync(p));
+
+if (clientDistPath) {
+    console.log(`[PrePlates] Serving static frontend from: ${clientDistPath}`);
+
+    // Serve built frontend assets in production with aggressive caching for hashed assets
+    app.use(
+        express.static(clientDistPath, {
+            maxAge: "1y",
+            immutable: true,
+            setHeaders: (res, filePath) => {
+                // index.html, service worker, and webmanifest must never be stale-cached
+                if (
+                    filePath.endsWith("index.html") ||
+                    filePath.endsWith("sw.js") ||
+                    filePath.endsWith("manifest.webmanifest")
+                ) {
+                    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+                } else if (filePath.includes("/assets/")) {
+                    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+                }
+            },
+        }),
+    );
+
+    // SPA fallback — send index.html for all non-API GET requests
+    app.use((req, res, next) => {
+        if (req.method === "GET" && !req.path.startsWith("/api") && !req.path.startsWith("/health")) {
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            return res.sendFile(path.join(clientDistPath, "index.html"));
+        }
+        next();
+    });
+}
+
 // 404 for unknown API routes
 app.use((req, res) => {
     res.status(404).json({
@@ -75,7 +134,7 @@ app.use((err, req, res, next) => {
 });
 
 const server = app.listen(port, () => {
-    console.log(`Server is running on PORT: ${port}`);
+    console.log(`[PrePlates] Server running on PORT: ${port}`);
 });
 
 // graceful shutdown — stop accepting new requests, finish in-flight ones, close DB

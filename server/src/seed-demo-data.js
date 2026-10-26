@@ -58,11 +58,11 @@ async function loginToken(clerkId, name) {
 }
 
 const OWNERS = [
-  { clerkId: "clerk-seed-1", first: "Asha", last: "R", email: "asha@preplate.io" },
-  { clerkId: "clerk-seed-2", first: "Ravi", last: "K", email: "ravi@preplate.io" },
-  { clerkId: "clerk-seed-3", first: "Neha", last: "S", email: "neha@preplate.io" },
-  { clerkId: "clerk-seed-4", first: "Sandeep", last: "P", email: "sandeep@preplate.io" },
-  { clerkId: "clerk-seed-5", first: "Priya", last: "M", email: "priya@preplate.io" },
+  { clerkId: "clerk-seed-1", first: "Asha", last: "R", email: "asha@preplates.io" },
+  { clerkId: "clerk-seed-2", first: "Ravi", last: "K", email: "ravi@preplates.io" },
+  { clerkId: "clerk-seed-3", first: "Neha", last: "S", email: "neha@preplates.io" },
+  { clerkId: "clerk-seed-4", first: "Sandeep", last: "P", email: "sandeep@preplates.io" },
+  { clerkId: "clerk-seed-5", first: "Priya", last: "M", email: "priya@preplates.io" },
 ];
 
 // name, location, contactName, contactPhone
@@ -150,15 +150,15 @@ const CATENDERS = [
 ];
 
 const CATENDERS_BY_EMAIL = {
-  "asha@preplate.io": "Ashok Canteen",
-  "ravi@preplate.io": "Ravi's Royal Kitchen",
-  "neha@preplate.io": "Neha's Noodle Lane",
-  "sandeep@preplate.io": "Sandeep's Spice Court",
-  "priya@preplate.io": "Priya's South Bowl",
+  "asha@preplates.io": "Ashok Canteen",
+  "ravi@preplates.io": "Ravi's Royal Kitchen",
+  "neha@preplates.io": "Neha's Noodle Lane",
+  "sandeep@preplates.io": "Sandeep's Spice Court",
+  "priya@preplates.io": "Priya's South Bowl",
 };
 
 async function main() {
-  console.log("🔧 Seeding demo data on http://localhost:5000/api");
+  console.log("🔧 [PrePlates] Seeding demo data on http://localhost:5000/api");
 
   // 1) Create each owner in MongoDB.
   const ownerIds = [];

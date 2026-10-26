@@ -1,7 +1,7 @@
 import { useId } from "react";
 
 /**
- * The one true PrePlate logo — a React component, not an <img>.
+ * The one true PrePlates logo — a React component, not an <img>.
  *
  * Why: SVGs loaded via <img> can't use the page's web fonts, so the old
  * wordmark rendered in fallback fonts and looked broken. This component
@@ -27,7 +27,7 @@ export default function LogoLockup({ size = 40, tagline = false, className = "" 
             height={size}
             viewBox="0 0 200 64"
             role="img"
-            aria-label="PrePlate — campus dining, pre-ordered"
+            aria-label="PrePlates — campus dining, pre-ordered"
         >
             <defs>
                 <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="0">
@@ -90,13 +90,13 @@ export default function LogoLockup({ size = 40, tagline = false, className = "" 
                 Pre
             </text>
             <text
-                x="122"
+                x="118"
                 y="42"
                 className="logo-plate"
-                textLength="70"
+                textLength="76"
                 lengthAdjust="spacing"
             >
-                PLATE
+                PLATES
             </text>
 
             {tagline && (

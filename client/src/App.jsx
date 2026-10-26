@@ -26,11 +26,13 @@ import useTheme from "./useTheme.js";
 import LogoLockup from "./LogoLockup.jsx";
 import PushSetup from "./PushSetup.jsx";
 
-const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const clerkPubKey =
+    import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ||
+    (typeof window !== "undefined" && window.__PREPLATES_CONFIG__?.CLERK_PUBLISHABLE_KEY);
 
 if (!clerkPubKey) {
     throw new Error(
-        "Missing VITE_CLERK_PUBLISHABLE_KEY — add it to client/.env",
+        "Missing VITE_CLERK_PUBLISHABLE_KEY — add it to client/.env or environment variables",
     );
 }
 
@@ -193,7 +195,7 @@ function TopBar({ theme, onToggleTheme }) {
 function Footer() {
     return (
         <footer className="footer">
-            © {new Date().getFullYear()} <strong>PrePlate</strong> — campus
+            © {new Date().getFullYear()} <strong>PrePlates</strong> — campus
             dining, pre-ordered.
         </footer>
     );

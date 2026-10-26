@@ -1,6 +1,6 @@
 {
-    "name": "PrePlate — Campus dining, pre-ordered",
-    "short_name": "PrePlate",
+    "name": "PrePlates — Campus dining, pre-ordered",
+    "short_name": "PrePlates",
     "description": "Browse every canteen, order ahead, pay by UPI or cash, skip the queue.",
     "start_url": "/",
     "display": "standalone",

@@ -18,7 +18,7 @@ export default function TokenSlip({ order, canteen, onClose }) {
         upiId: canteen?.upiId,
         payeeName: canteen?.name,
         amount: order.totalAmount,
-        note: `PrePlate #${order.tokenNumber ?? tr}`,
+        note: `PrePlates #${order.tokenNumber ?? tr}`,
         tr,
     });
 
@@ -47,7 +47,7 @@ export default function TokenSlip({ order, canteen, onClose }) {
                 <div className="slip-sheet">
                     <header className="slip-head">
                         <div>
-                            <p className="slip-brand">PrePlate</p>
+                            <p className="slip-brand">PrePlates</p>
                             <p className="slip-canteen">{canteen?.name}</p>
                         </div>
                         <div className="slip-token">

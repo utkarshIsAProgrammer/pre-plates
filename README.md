@@ -1,14 +1,14 @@
-# 🍽️ PrePlate — Smart Campus Dining & Pre-Ordering System
+# 🍽️ PrePlates — Smart Campus Dining & Pre-Ordering System
 
 <div align="center">
 
 ```
-    ____             ____  __      __       
-   / __ \________   / __ \/ /___ _/ /____   
-  / /_/ / ___/ _ \ / /_/ / / __ `/ __/ _ \  
- / ____/ /  /  __// ____/ / /_/ / /_/  __/  
-/_/   /_/   \___//_/   /_/\__,_/\__/\___/   
-                                            
+    ____             ____  __      __           
+   / __ \________   / __ \/ /___ _/ /____  _____
+  / /_/ / ___/ _ \ / /_/ / / __ `/ __/ _ \/ ___/
+ / ____/ /  /  __// ____/ / /_/ / /_/  __(__  ) 
+/_/   /_/   \___//_/   /_/\__,_/\__/\___/____/  
+                                                
    Campus dining, pre-ordered. Zero queues. Pure efficiency.
 ```
 
@@ -31,7 +31,7 @@
 
 College cafeterias during peak lunch hours face severe queue congestion, delayed orders, and overwhelmed kitchen staff. Students spend 20–30 minutes waiting in line, often missing classes or meals.
 
-**PrePlate** transforms campus dining into a zero-queue, pre-order ecosystem:
+**PrePlates** transforms campus dining into a zero-queue, pre-order ecosystem:
 - **Students** browse menus from their classroom or hostel, place customized food orders, pay via amount-locked dynamic UPI QR codes or cash on delivery, and track live status.
 - **Vendors** manage orders in real-time through an interactive kitchen dashboard equipped with audio alerts, step-by-step state transitions, inventory toggles, and daily revenue statistics.
 - **Tokens** are minted atomically per canteen per day (`#001`, `#002`), ensuring dispute-free, rapid food collection at pickup counters.
@@ -75,7 +75,7 @@ College cafeterias during peak lunch hours face severe queue congestion, delayed
 - **Daily Performance Metrics**: Real-time breakdown of daily order volume, revenue totals, and average prep durations.
 
 ### 🛡️ Production-Grade Engineering & Infrastructure
-- **Campus-NAT Safe Rate Limiting**: Traditional IP-based rate limiting fails on campus Wi-Fi where hundreds of students share a single gateway IP. PrePlate keys rate limits to Clerk user identities, falling back to IP only for anonymous traffic.
+- **Campus-NAT Safe Rate Limiting**: Traditional IP-based rate limiting fails on campus Wi-Fi where hundreds of students share a single gateway IP. PrePlates keys rate limits to Clerk user identities, falling back to IP only for anonymous traffic.
 - **Upstash Redis Caching & Rate Limiting**: Ultra-fast REST-based caching with automatic cache invalidation on menu updates. Gracefully degrades to in-memory store if Redis credentials are not configured.
 - **Atomic Sequential Token Minting**: Eliminates race conditions in token numbers using atomic MongoDB `$inc` sequences scoped per day and canteen.
 - **Offline PWA Shell**: CacheFirst strategy for immutable static assets and NetworkFirst for API data with an ambient connection loss warning banner.
@@ -92,7 +92,7 @@ College cafeterias during peak lunch hours face severe queue congestion, delayed
                                │ HTTPS / JSON REST API
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              PrePlate Backend (Node + Express 5)            │
+│             PrePlates Backend (Node + Express 5)            │
 │                                                             │
 │  ┌─────────────────────────┐     ┌───────────────────────┐  │
 │  │ Clerk Auth Middleware   │ ◄─► │ Upstash Redis Store   │  │
@@ -245,7 +245,7 @@ All 12 checks pass instantly to guarantee rate limiter and cache compatibility.
 | `CLERK_SECRET_KEY` | Clerk backend API secret key | **Required** |
 | `VAPID_PUBLIC_KEY` | VAPID public key for Web Push | **Required** |
 | `VAPID_PRIVATE_KEY`| VAPID private key for Web Push | **Required** |
-| `VAPID_SUBJECT` | Contact URI for push dispatch | `mailto:admin@preplate.app` |
+| `VAPID_SUBJECT` | Contact URI for push dispatch | `mailto:admin@preplates.app` |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL | Optional (falls back to memory) |
 | `UPSTASH_REDIS_REST_TOKEN`| Upstash Redis REST token | Optional |
 | `CLOUDINARY_CLOUD_NAME` | Cloudinary storage bucket name | Optional |
@@ -280,16 +280,73 @@ All 12 checks pass instantly to guarantee rate limiter and cache compatibility.
 
 ---
 
-## 🚢 Deployment (Render)
+## 🚢 Deployment (Unified Architecture — Same as Knots)
 
-Deploy the entire stack with zero manual configuration using the included **Render Blueprint** (`render.yaml`):
+PrePlates uses the **unified single-service deployment pattern** (matching Knots). Instead of deploying the frontend and backend as two separate services (which consumes double the free-tier allowance and causes CORS roundtrips), both the React Vite SPA and Express API run inside **one single container/service**.
 
-1. Commit and push this repository to GitHub.
-2. In the Render Dashboard, click **New → Blueprint** and select your repository.
-3. Supply secret credentials in the Render dashboard:
-   - `MONGO_URI`, `CLERK_SECRET_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
-   - *(Optional)*: `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, Cloudinary keys.
-4. Render automatically provisions the Node API service and deploys the static client SPA with PWA rewrite routing rules.
+### Why this is optimal for Free Tier:
+- **Zero CORS Latency**: Because the frontend is served directly from the same origin, the browser never sends preflight `OPTIONS` requests. All API calls execute at native origin speed.
+- **50% Free Resource Consumption**: Render and other cloud hosts provide 750 free hours/month. Two services burn 1500 hours and sleep/exceed limits halfway through the month; a single service uses only 750 hours and stays within free limits.
+- **Instant Asset Delivery**: Built client assets (`/assets/*`) are served with 1-year immutable caching (`max-age=31536000, immutable`), while `index.html` and `sw.js` use `no-cache` to ensure instant updates.
+- **Single Cold Start**: No desynchronization where the frontend loads but the backend is asleep. When the service awakens, both are immediately active.
+
+---
+
+### Option A: Deploy via Docker (Recommended)
+
+PrePlates includes a multi-stage `Dockerfile` (identical to Knots) that compiles the frontend and packages the backend in an ultra-lightweight Alpine Linux runner (~140MB):
+
+```bash
+# 1. Build the production container
+docker build -t preplates .
+
+# 2. Run the production container
+docker run -d -p 5000:5000 --env-file server/.env preplates
+```
+
+---
+
+### Option B: Deploy Frontend to Vercel + Backend to Render
+
+1. **Deploy Backend on Render**:
+   - Create a **Web Service** pointing to `server/` with build `npm install` and start `npm start` (or use Blueprint with `render.yaml`).
+   - Add environment variables (`MONGO_URI`, `CLERK_SECRET_KEY`, `VAPID_*`, `CLIENT_URL` pointing to your Vercel domain).
+2. **Deploy Frontend on Vercel**:
+   - Import repository on Vercel with root directory set to `client` (or use root with included `vercel.json`).
+   - Add environment variables:
+     - `VITE_CLERK_PUBLISHABLE_KEY`: your Clerk key
+     - `VITE_API_URL`: your Render backend URL (e.g. `https://preplates.onrender.com`)
+   - Deploy!
+
+---
+
+### Option C: Deploy to Render (1-Click Blueprint)
+
+Deploy using the included `render.yaml`:
+1. Push this repository to GitHub.
+2. In the Render Dashboard, click **New → Blueprint** and connect your repository.
+3. Configure your environment secrets in Render:
+   - `MONGO_URI`, `CLERK_SECRET_KEY`, `VITE_CLERK_PUBLISHABLE_KEY`
+   - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
+   - *(Optional)*: `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, Cloudinary credentials.
+4. Render builds and provisions the single unified service.
+
+---
+
+### Option D: Manual Monorepo Build & Run
+
+```bash
+# Install dependencies for both client and server
+npm run install:all
+
+# Build frontend to client/dist
+npm run build
+
+# Start production server (serves API + static frontend)
+npm start
+```
+
+For complete deployment details and free-tier tuning, see [`docs/deployment.md`](./docs/deployment.md).
 
 ---
 

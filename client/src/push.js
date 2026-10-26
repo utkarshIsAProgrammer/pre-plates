@@ -8,7 +8,7 @@
  * getToken comes from useAuth() in the component (same convention as api.js).
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
+const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
 
 const urlBase64ToUint8Array = (base64String) => {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
